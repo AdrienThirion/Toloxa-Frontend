@@ -1,0 +1,279 @@
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@300;400;500;600&family=Roboto+Flex:wght@300;400;500;600&display=swap');
+
+/* 🎨 Define Font and Color Variables */
+:root {
+    --font-header: 'Roboto Condensed', sans-serif;
+    --font-body: 'Roboto Flex', sans-serif;
+
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600;
+
+    --font-size-header-large: 96px;
+    --font-size-header-mobile: 40px;
+    --font-size-title: 24px;
+    --font-size-title-mobile: 20px;
+    --font-size-body: 20px;
+    --font-size-body-mobile: 16px;
+
+    --color-green-highlight: #1E4736;
+    --color-background1: #F0EAE6;
+    --color-background2: #E0DAD6;
+    --color-background3: #0D0D0D;
+    --color-background4: #F9F7F6;
+    --color-alert: #DE3939;
+    --color-gold-highlight: #C9A740;
+
+    --color-text-primary: #0D0D0D; /* Default text color */
+}
+
+/* 🌍 Global Styles */
+body {
+    font-family: var(--font-body);
+    text-align: center;
+    background-color: var(--color-background4);
+    margin: 0;
+    padding: 0;
+    color: var(--color-text-primary);
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between; /* Ensures logo is on top, cards in center, button at bottom */
+    height: 90vh;
+    padding: 40px;
+}
+/* 📌 Logo */
+.logo {
+    width: 30vw;
+    max-width: 200px;
+    min-width: 80px;
+    height: auto;
+    margin-top: 10px;
+}
+
+
+/* 📌 Appliance Card Container */
+/* 📌 Appliance Card Container - Always in One Row */
+.appliance-container {
+    display: flex;
+    flex-direction: row; /* Keep all appliances in a single row */
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    overflow-x: auto; /* Enable horizontal scrolling only inside the container */
+    overflow-y: hidden; /* Prevent vertical scrolling */
+    white-space: nowrap; /* Ensure no wrapping */
+    padding: 10px;
+    max-width: 90vw; /* Prevent the container from expanding too much */
+    margin: 0 auto; /* Center the container */
+    scroll-snap-type: x mandatory; /* Smooth snapping when scrolling */
+}
+
+/* 📌 Show horizontal scrollbar only inside appliance-container */
+.appliance-container::-webkit-scrollbar {
+    height: 6px; /* Make scrollbar thinner */
+}
+
+.appliance-container::-webkit-scrollbar-thumb {
+    background: var(--color-background3); /* Dark color for the thumb */
+    border-radius: 5px;
+}
+
+.appliance-container::-webkit-scrollbar-track {
+    background: var(--color-background1); /* Light background */
+}
+
+/* 📌 Individual Appliance Card */
+/* Appliance Card */
+.appliance-card {
+    width: 240px;
+    height: 300px;
+    background: var(--color-background1);
+    border: 3px solid var(--color-background3);
+    box-shadow: 4px 8px 4px rgba(0, 0, 0, 0.25);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;  /* Centers content horizontally */
+    justify-content: center; /* Centers content vertically */
+    text-align: center; /* Ensures text alignment is centered */
+    padding: 20px;
+    transition: transform 0.3s ease-in-out;
+}
+
+/* 📌 Appliance Icon */
+.appliance-icon {
+    width: 180px;
+    height: auto;
+    margin: 0 auto 10px auto; /* Auto margins for horizontal centering */
+    display: block;
+}
+
+/* 📌 Appliance Header */
+.appliance-header {
+    font-family: var(--font-header);
+    font-weight: var(--font-weight-regular);
+    font-size: var(--font-size-header-large);
+    line-height: 112px;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+}
+
+/* 📌 Appliance Title */
+.appliance-title {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-light);
+    font-size: var(--font-size-title);
+    line-height: 28px;
+    color: var(--color-green-highlight);
+    margin-bottom: 5px;
+}
+
+/* 📌 Title 2 */
+.appliance-title2 {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-light);
+    font-size: var(--font-size-title);
+    line-height: 28px;
+    color: var(--color-text-primary);
+    margin-bottom: 10px;
+}
+
+/* 📌 Highlighted Text */
+.appliance-highlight {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-bold);
+    font-size: var(--font-size-body);
+    line-height: 23px;
+    color: var(--color-green-highlight);
+    margin-bottom: 10px;
+}
+
+/* 📌 Regular Body Text */
+.appliance-body {
+    font-family: var(--font-body);
+    font-weight: var(--font-weight-light);
+    font-size: var(--font-size-body);
+    line-height: 23px;
+    color: var(--color-text-primary);
+}
+
+/* 📌 Button */
+.button {
+
+    width: 240px;
+    height: 240px;
+    align-items: center;
+    background-color: var(--color-background2);
+
+    background: var(--color-background2);
+    border: 3px solid var(--color-gold-highlight);
+    border-radius: 50%; /* Make it a perfect circle */
+
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out, background 0.3s ease-in-out;
+    overflow: hidden; /* Ensure the text does not affect the shape */
+}
+
+.button span {
+    position: center;
+
+    font-family: var(--font-body);
+    font-size: 48px;
+    font-weight: var(--font-weight-medium);
+    color: var(--color-green-highlight);
+}
+
+.button:hover {
+    background: var(--color-gold-highlight);
+    color: white;
+    transform: scale(1.05);
+}
+/* 📌 Responsive Media Queries */
+
+/* 🖥️ Tablets (max-width: 768px) */
+@media (max-width: 768px) {
+    .appliance-card {
+        width: 200px;
+        height: 240px;
+    }
+
+    .appliance-header {
+        font-size: var(--font-size-header-mobile);
+        line-height: 47px;
+    }
+
+    .appliance-title,
+    .appliance-title2 {
+        font-size: var(--font-size-title-mobile);
+        line-height: 23px;
+    }
+
+    .appliance-highlight,
+    .appliance-body {
+        font-size: var(--font-size-body-mobile);
+        line-height: 19px;
+    }
+
+    .appliance-icon {
+        width: 140px;
+        height: auto;
+    }
+
+    .button {
+        width: 200px;
+        height: 200px;
+    }
+
+    .button span {
+        font-size: 36px;
+    }
+}
+
+/* 📱 Mobile (max-width: 480px) */
+@media (max-width: 480px) {
+    .appliance-container {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .appliance-card {
+        width: 150px;
+        height: 180px;
+    }
+
+    .appliance-header {
+        font-size: calc(var(--font-size-header-mobile) * 0.8);
+        line-height: 36px;
+    }
+
+    .appliance-title,
+    .appliance-title2 {
+        font-size: calc(var(--font-size-title-mobile) * 0.9);
+    }
+
+    .appliance-highlight,
+    .appliance-body {
+        font-size: calc(var(--font-size-body-mobile) * 0.9);
+    }
+
+    .appliance-icon {
+        width: 120px;
+        height: auto;
+    }
+
+    .logo {
+        width: 50vw;
+        max-width: 150px;
+    }
+
+    .button {
+        width: 180px;
+        height: 180px;
+    }
+}
+
