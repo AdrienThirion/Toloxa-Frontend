@@ -1,0 +1,261 @@
+/* 🎨 Define Global Colors & Fonts */
+:root {
+    --font-header: 'Roboto Condensed', sans-serif;
+    --font-body: 'Roboto Flex', sans-serif;
+
+    --font-weight-light: 300;
+    --font-weight-regular: 400;
+    --font-weight-medium: 500;
+    --font-weight-bold: 600;
+
+    --font-size-header: 24px;
+    --font-size-body: 18px;
+    --font-size-body-mobile: 16px;
+
+    --color-green-highlight: #1E4736;
+    --color-background1: #F0EAE6;
+    --color-background2: #E0DAD6;
+    --color-background3: #0D0D0D;
+    --color-background4: #F9F7F6;
+    --color-alert: #DE3939;
+    --color-gold-highlight: #C9A740;
+    --color-text-primary: #0D0D0D;
+}
+
+body {
+    background: var(--color-background3); 
+}
+
+.audio-visualizer {
+    width: 50%;
+    height: auto;
+    background: var(--color-background1);
+
+    /* ✅ Add spacing above and below */
+    margin: 20px 0;
+}
+
+/* 📌 Vocal Assistant Chat Container */
+.vocal-chat-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    height: 100vh;
+    width: 100%;
+    max-width: 1024px;
+    margin: auto;
+    background: var(--color-background1);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    overflow: hidden;
+    font-family: var(--font-body);
+}
+
+/* 📌 Header */
+.vocal-chat-header {
+    display: flex;
+    align-items: center; /* ✅ Ensure vertical alignment */
+    justify-content: space-between; /* ✅ Space out elements */
+    width: 95%;
+    max-width: 1000px;
+    height: 40px;
+    padding: 14px 50px 14px 50px; /* 🔹 Add left & right padding */
+    background: var(--color-background2);
+    color: white;
+    position: relative;
+    user-select: none;
+}
+.left-icons {
+    display: flex;
+    align-items: center;
+    gap: 10px; /* ✅ Space between mic and audio icons */
+}
+
+.vocal-chat-header .logo {
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%); /* ✅ Ensures it's perfectly centered */
+    height: 60px; /* Adjust size */
+    max-width: 150px;
+}
+
+
+.quit-button {
+    background: none; /* ✅ Removes default button background */
+    border: none; /* ✅ Removes default button border */
+    padding: 5px;
+    cursor: pointer;
+    transition: transform 0.2s ease-in-out;
+}
+
+.icon {
+    height: 30px;
+    width: auto;
+    cursor: pointer;
+}
+
+.icon:hover {
+    transform: scale(1.1);
+}
+
+
+
+/* 📌 Right Icon (Quit Button) */
+.quit-icon {
+    height: 25px;
+    margin-left: auto; /* ✅ Pushes quit button to the right */
+}
+
+
+/* 📌 Messages Container */
+.vocal-chat-messages {
+    flex-grow: 1;
+    width: 100%;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background: var(--color-background1);
+}
+
+/* 📌 Individual Messages */
+.vocal-message {
+    max-width: 70%;
+    padding: 12px;
+    margin: 8px;
+    border-radius: 10px;
+    font-size: var(--font-size-body);
+    word-wrap: break-word;
+    user-select: text;
+    pointer-events: none;
+    caret-color: transparent;
+}
+
+/* 📌 Assistant Messages */
+.vocal-message.assistant {
+    align-self: flex-start;
+    background: var(--color-background2);
+    color: var(--color-text-primary);
+    border: 1px solid var(--color-gold-highlight);
+}
+
+/* 📌 User Messages */
+.vocal-message.user {
+    align-self: flex-end;
+    background: var(--color-green-highlight);
+    color: white;
+    border: 1px solid var(--color-background3);
+}
+
+.vocal-chat-input-container {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 12px ;
+    background: var(--color-background1);
+    position: relative;
+    max-width: 95%;
+}
+
+/* 📌 Chat Input Area */
+/* 📌 Chat Input (Ensure Multi-Line Wrapping) */
+.vocal-chat-input {
+    flex-grow: 1;
+    padding: 12px 60px 12px 20px; /* 🔹 Adjust padding */
+    border: 1px solid var(--color-background3);
+    border-radius: 16px;
+    font-size: var(--font-size-body);
+    outline: none;
+    background: var(--color-background4);
+    color: var(--color-text-primary);
+    font-family: var(--font-body);
+    transition: border 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.25);
+
+    /* ✅ Convert to multi-line input */
+    resize: none; /* 🔹 Prevent manual resizing */
+    white-space: normal; /* 🔹 Allows wrapping */
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-height: 200px;
+
+    /* ✅ Ensures text area expands when needed */
+    overflow-y: auto;
+}
+
+/* 📌 Chat Input - Focus Effect */
+.vocal-chat-input:focus {
+    border-color: var(--color-gold-highlight);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+
+/* 📌 Send Button (Inside Input) */
+.vocal-chat-send-button {
+    position: absolute;
+    right: 35px;
+    background: var(--color-gold-highlight);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease-in-out;
+}
+
+/* 📌 Send Button Hover Effect */
+.vocal-chat-send-button:hover {
+    background: var(--color-green-highlight);
+    transform: scale(1.05);
+}
+
+
+/* 📌 Mobile Optimization */
+@media (max-width: 480px) {
+    .vocal-chat-header {
+        height: 20px;
+    }
+
+    .quit-icon {
+        height: 15px;
+    }
+
+    
+    .icon {
+        height: 20px;
+    }
+
+    .vocal-chat-header .logo {
+        height: 40px;
+    }
+
+    .vocal-chat-container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+    }
+
+    .vocal-message {
+        font-size: var(--font-size-body-mobile);
+        padding: 10px;
+    }
+
+    .vocal-chat-input {
+        font-size: var(--font-size-body-mobile);
+        padding: 12px 50px 12px 16px; /* Keep good padding */
+    }
+
+    .vocal-chat-send-button {
+        width: 35px;
+        height: 35px;
+        font-size: 14px;
+        right: 20px;
+    }
+}

@@ -30,22 +30,27 @@
 
 /* 🌍 Global Styles */
 body {
-    font-family: var(--font-body);
+    font-family: var(--color-background4);
     text-align: center;
     background-color: var(--color-background4);
     margin: 0;
     padding: 0;
-    color: var(--color-text-primary);
+    color: var(--color-background4);
 }
 
 .container {
+    background-color: var(--color-background4);
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-between; /* Ensures logo is on top, cards in center, button at bottom */
-    height: 90vh;
+    justify-content: center; /* Centers everything */
+    height: 100vh;
     padding: 40px;
+    position: relative;
+
+    margin: 0 auto; 
 }
+
 /* 📌 Logo */
 .logo {
     width: 30vw;
@@ -53,6 +58,7 @@ body {
     min-width: 80px;
     height: auto;
     margin-top: 10px;
+    user-select: none;
 }
 
 
@@ -60,17 +66,17 @@ body {
 /* 📌 Appliance Card Container - Always in One Row */
 .appliance-container {
     display: flex;
-    flex-direction: row; /* Keep all appliances in a single row */
+    flex-direction: row; /* Keep in one row */
     align-items: center;
     justify-content: center;
     gap: 20px;
-    overflow-x: auto; /* Enable horizontal scrolling only inside the container */
-    overflow-y: hidden; /* Prevent vertical scrolling */
-    white-space: nowrap; /* Ensure no wrapping */
-    padding: 10px;
-    max-width: 90vw; /* Prevent the container from expanding too much */
-    margin: 0 auto; /* Center the container */
-    scroll-snap-type: x mandatory; /* Smooth snapping when scrolling */
+    overflow-x: auto; /* Enable horizontal scrolling */
+    white-space: nowrap; /* Prevent wrapping */
+    padding: 20px;
+    max-width: 90vw;
+    margin: 0 auto;
+    scroll-snap-type: x mandatory;
+    flex-grow: 1; /* Ensures it stays in the middle */
 }
 
 /* 📌 Show horizontal scrollbar only inside appliance-container */
@@ -103,6 +109,28 @@ body {
     text-align: center; /* Ensures text alignment is centered */
     padding: 20px;
     transition: transform 0.3s ease-in-out;
+    min-height: 200px; /* ⏳ Ensures fixed height */
+    margin-bottom: 100px; /* 🚀 Ensures space for button */
+}
+
+.appliance-card:hover {
+    background: var(--color-gold-highlight);
+    color: white;
+    transform: scale(1.05);
+}
+
+/* 📌 Appliance Card - Selected (Stays After Click) */
+.appliance-card.selected {
+    background: var(--color-gold-highlight); /* Same as hover */
+    color: white;
+    border: 3px solid var(--color-background3);
+    transform: scale(1.05);
+}
+.button-container {
+    height: 240px; /* Matches button height */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 /* 📌 Appliance Icon */
@@ -111,6 +139,7 @@ body {
     height: auto;
     margin: 0 auto 10px auto; /* Auto margins for horizontal centering */
     display: block;
+    user-select: none;
 }
 
 /* 📌 Appliance Header */
@@ -176,7 +205,10 @@ body {
 
     cursor: pointer;
     transition: transform 0.2s ease-in-out, background 0.3s ease-in-out;
-    overflow: hidden; /* Ensure the text does not affect the shape */
+    user-select: none;
+    visibility: hidden; /* ⏳ Keeps space while hiding */
+    pointer-events: none; /* 🔹 Prevent interactions when hidden */
+    margin-bottom: 150px;
 }
 
 .button span {
@@ -188,6 +220,11 @@ body {
     color: var(--color-green-highlight);
 }
 
+.button.show{
+    visibility: visible; /* ✅ Button appears without shifting */
+    pointer-events: auto;
+}
+
 .button:hover {
     background: var(--color-gold-highlight);
     color: white;
@@ -197,6 +234,12 @@ body {
 
 /* 🖥️ Tablets (max-width: 768px) */
 @media (max-width: 768px) {
+
+    .container {
+        width: 100%; /* Give more breathing room on very small screens */
+        padding: 0px;
+    }
+
     .appliance-card {
         width: 200px;
         height: 240px;

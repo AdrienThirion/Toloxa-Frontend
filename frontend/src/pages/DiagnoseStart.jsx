@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logoL.svg"; 
 import ApplianceCard from "../components/ApplianceCard"; 
@@ -8,6 +9,14 @@ import ovenIcon from "../assets/oven.svg";
 import dishwasherIcon from "../assets/dishwasher.svg";
 
 function DiagnoseStart() {
+
+    const [selectedAppliance, setSelectedAppliance] = useState(null);
+
+    // Handle selection
+    const handleSelect = (appliance) => {
+        setSelectedAppliance(appliance);
+    };
+
     return (
         <div className="container">
             {/* Main Logo */}
@@ -15,14 +24,16 @@ function DiagnoseStart() {
 
             {/* Appliance Cards */}
             <div className="appliance-container">
-                <ApplianceCard image={washingMachineIcon} title="Lave-linge" />
-                <ApplianceCard image={ovenIcon} title="Four" />
-                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" />
+                <ApplianceCard image={washingMachineIcon} title="Lave-linge"  selected={selectedAppliance === "WM"} onSelect={() => handleSelect("WM")}/>
+                <ApplianceCard image={ovenIcon} title="Four" selected={selectedAppliance === "OVEN"} onSelect={() => handleSelect("OVEN")}/>
+                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" selected={selectedAppliance === "DM"} onSelect={() => handleSelect("DM")}/>
             </div>
 
-            <Link to="/vocal-assistant">
-                <button className="button"><span>Démarrer</span></button>
-            </Link>
+            <div className="button-container">
+                {selectedAppliance && (<Link to="/vocal-assistant">
+                    <button className={`button ${selectedAppliance ? "show" : ""}`}><span>Démarrer</span></button>
+                </Link>)}
+            </div>
         </div>
     );
 }
