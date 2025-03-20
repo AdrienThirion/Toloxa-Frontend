@@ -30,6 +30,9 @@ body {
     width: 50%;
     height: auto;
     background: var(--color-background1);
+    display: flex;
+    align-items: center; /* ✅ Ensure vertical alignment */
+    position: relative;
 
     /* ✅ Add spacing above and below */
     margin: 20px 0;
@@ -163,7 +166,7 @@ body {
 /* 📌 Chat Input (Ensure Multi-Line Wrapping) */
 .vocal-chat-input {
     flex-grow: 1;
-    padding: 12px 60px 12px 20px; /* 🔹 Adjust padding */
+    padding: 10px 60px 2px 12px; /* 🔹 Adjust padding */
     border: 1px solid var(--color-background3);
     border-radius: 16px;
     font-size: var(--font-size-body);
@@ -200,14 +203,41 @@ body {
     color: white;
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 35px;
+    height: 35px;
     cursor: pointer;
     font-size: 16px;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: background 0.3s ease-in-out;
+}
+
+.stop-button {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--color-alert); /* ✅ Matches alert color */
+    border: none;
+    background: none; /* ✅ Removes button background */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.3s ease-in-out;
+    position: absolute;
+    right: 40px;
+    padding: 10px 00px 15px 0px; /* 🔹 Adjust padding */
+}
+
+/* 📌 Stop Icon (Increase Size) */
+.stop-icon {
+    font-size: 24px; /* ✅ Increases emoji size */
+}
+
+/* 📌 Stop Button Hover */
+.stop-button:hover {
+    transform: scale(1.1);
+    color: darkred; /* ✅ Darker effect on hover */
 }
 
 /* 📌 Send Button Hover Effect */
@@ -256,6 +286,12 @@ body {
         width: 35px;
         height: 35px;
         font-size: 14px;
+        right: 20px;
+    }
+
+    .stop-button {
+        font-size: 14px;
+        padding: 10px 00px 15px 0px; /* 🔹 Adjust padding */
         right: 20px;
     }
 }

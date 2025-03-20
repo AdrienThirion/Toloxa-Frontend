@@ -12,8 +12,11 @@ import micOFF from "../assets/mic-off.svg";
 function VocalAssistant() {
     const [isMicOn, setIsMicOn] = useState(true); // Track Mic state
     const [isAudioOn, setIsAudioOn] = useState(true); // Track Mic state
+    const [isResponding, setIsResponding] = useState(false); // ✅ Track assistant response status
     const [audioStream, setAudioStream] = useState(null);
     const [isSessionActive, _] = useState(true);
+    const [controller, setController] = useState(null); // ✅ Track the AbortController to cancel response
+
 
     useEffect(() => {
         const getAudioStream = async () => {
@@ -59,7 +62,7 @@ function VocalAssistant() {
     const adjustTextareaHeight = () => {
         const textarea = textareaRef.current;
         textarea.style.height = "30px"; // Reset height
-        textarea.style.height = `${textarea.scrollHeight - 24}px`; // Set to scroll height
+        textarea.style.height = `${textarea.scrollHeight - 12}px`; // Set to scroll height
     };
     
     // Scroll to bottom whenever messages change
@@ -78,16 +81,51 @@ function VocalAssistant() {
         setTimeout(() => { 
             textareaRef.current.style.height = "30px"; // ✅ Force reset height
         }, 0); 
-
+        setIsResponding(true); // ✅ Disable input while responding
         // Simulate Assistant Response
-        setTimeout(() => {
-            setMessages(prevMessages => [
-                ...prevMessages,
-                { text: "I'm here to help! Tell me what you need.", sender: "assistant" }
-            ]);
-        }, 1000);
+        const newController = new AbortController();
+        setController(newController);
+
+        simulateAssistantResponse(newController.signal);
+    };
+
+    const simulateAssistantResponse = async (signal) => {
+        try {
+            await new Promise((resolve, reject) => {
+                const timeout = setTimeout(() => {
+                    setMessages(prevMessages => [
+                        ...prevMessages,
+                        { text: "I'm here to help! Tell me what you need.", sender: "assistant" }
+                    ]);
+                    setIsResponding(false); // ✅ Re-enable input
+                    resolve();
+                }, 3000); // Simulate 3-second delay
+
+                signal.addEventListener("abort", () => {
+                    clearTimeout(timeout);
+                    reject(new Error("Response Aborted"));
+                });
+            });
+        } catch {
+            console.log("Assistant response was stopped.");
+            setIsResponding(false); // ✅ Re-enable input
+        }
+    };
+
+    const stopResponse = () => {
+        if (controller) {
+            controller.abort(); // ✅ Cancel assistant response
+            setController(null);
+        }
+        setIsResponding(false); // ✅ Re-enable input immediately
+    };
 
 
+    const handleKeyDown = (e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault(); // ✅ Prevents new line when pressing Enter
+            sendMessage();
+        }
     };
 
     return (
@@ -143,12 +181,20 @@ function VocalAssistant() {
             <textarea 
             ref={textareaRef} // ✅ Attach ref
             className="vocal-chat-input"
-            placeholder="Send a message..."
+            placeholder={isResponding ? "Waiting for response..." : "Send a message..."}
             value={input} // ✅ Controlled input
             onChange={(e) => {setInput(e.target.value); adjustTextareaHeight();}}
+            onKeyDown={handleKeyDown} // ✅ Detect "Enter" key
             rows="1"  // Starts with 1 row
+            disabled={isResponding} // ✅ Disable input when assistant is responding
         ></textarea>
-            <button className="vocal-chat-send-button" onClick={sendMessage}>➤</button>
+            {isResponding ? (
+                <button className="stop-button" onClick={stopResponse}>
+                    <span className="stop-icon">🟥</span>
+                </button>
+            ) : (
+                <button className="vocal-chat-send-button" onClick={sendMessage}>➤</button>
+            )}
 </div>
         </div>
     );

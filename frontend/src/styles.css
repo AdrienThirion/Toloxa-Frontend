@@ -43,12 +43,11 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center; /* Centers everything */
-    height: 100vh;
-    padding: 40px;
+    justify-content: space-between;
+    height: 100vh; /* ✅ Fixes vertical overflow */
+    width: 100%;
+    overflow: hidden; /* ✅ Prevents unwanted scrollbar */
     position: relative;
-
-    margin: 0 auto; 
 }
 
 /* 📌 Logo */
@@ -66,17 +65,17 @@ body {
 /* 📌 Appliance Card Container - Always in One Row */
 .appliance-container {
     display: flex;
-    flex-direction: row; /* Keep in one row */
-    align-items: center;
+    flex-wrap: nowrap;
     justify-content: center;
     gap: 20px;
-    overflow-x: auto; /* Enable horizontal scrolling */
-    white-space: nowrap; /* Prevent wrapping */
-    padding: 20px;
-    max-width: 90vw;
+    overflow-x: auto; /* ✅ Enables horizontal scrolling */
+    overflow-y: hidden;
+    white-space: nowrap;
+    max-width: 95%;
+    width: 95%;
     margin: 0 auto;
-    scroll-snap-type: x mandatory;
-    flex-grow: 1; /* Ensures it stays in the middle */
+    padding-bottom: 10px; /* ✅ Prevents button overlap */
+    padding-top: 10px;
 }
 
 /* 📌 Show horizontal scrollbar only inside appliance-container */
@@ -287,6 +286,7 @@ body {
     .appliance-card {
         width: 150px;
         height: 180px;
+        margin-bottom: 10px;
     }
 
     .appliance-header {
@@ -315,8 +315,9 @@ body {
     }
 
     .button {
-        width: 180px;
-        height: 180px;
+        width: 170px;
+        height: 170px;
+        margin-bottom: 80px;
     }
 }
 

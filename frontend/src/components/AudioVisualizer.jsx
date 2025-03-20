@@ -15,8 +15,9 @@ function AudioVisualizer({ audioStream, isSessionActive }) {
 
         // ✅ Improve resolution for high-DPI screens
         const dpi = window.devicePixelRatio || 1;
-        const width = canvas.clientWidth * dpi;
-        const height = canvas.clientHeight * dpi;
+        const computedStyle = getComputedStyle(canvas);
+        const width = parseInt(computedStyle.getPropertyValue("width"), 10) * dpi;
+        const height = parseInt(computedStyle.getPropertyValue("height"), 10) * dpi;
         canvas.width = width;
         canvas.height = height;
         ctx.scale(dpi, dpi); // ✅ Scale canvas for better rendering
@@ -35,12 +36,12 @@ function AudioVisualizer({ audioStream, isSessionActive }) {
                 return;
             }
 
-            ctx.clearRect(0, 0, width, height);
+            ctx.clearRect(0, 0, canvas.width / dpi, canvas.height / dpi);
             micAnalyzer.getByteFrequencyData(micDataArray);
 
-            const centerX = width / 2;
-            const centerY = height / 2;
-            const maxRadius = Math.min(width, height) / 3; // ✅ Slightly smaller for better fit
+            const centerX = (canvas.width / dpi) / 2;
+            const centerY = (canvas.height / dpi) / 2;
+            const maxRadius = Math.min(canvas.width / dpi, canvas.height / dpi) / 2.5;
             const numCircles = micDataArray.length;
 
             for (let i = 0; i < numCircles; i++) {
