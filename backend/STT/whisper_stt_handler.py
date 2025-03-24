@@ -9,6 +9,7 @@ from baseHandler import BaseHandler
 from rich.console import Console
 import logging
 
+
 logger = logging.getLogger(__name__)
 console = Console()
 

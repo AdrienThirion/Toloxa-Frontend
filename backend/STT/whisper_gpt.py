@@ -7,11 +7,15 @@ import tempfile
 import numpy as np
 import io
 import soundfile as sf
+from dotenv import load_dotenv
+
+# Load the environment variables from .env file
+load_dotenv()
+
+# Now you can access the environment variable just like before
+api_key = os.environ.get('OPENAI_API_KEY')
 
 logger = logging.getLogger(__name__)
-
-# os.environ["OPENAI_API_KEY"] = "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"
-os.environ["OPENAI_API_KEY"] = "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"
 
 client = OpenAI()
 
@@ -31,7 +35,7 @@ class WhisperGPTHandler(BaseHandler):
     ):
         self.model_name = "whisper-1"
         self.language = "fr"
-        self.client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY"))
+        self.client = OpenAI(api_key=api_key)
 
     def process(self, spoken_prompt):
         logger.debug("Inferring with OpenAI Whisper...")

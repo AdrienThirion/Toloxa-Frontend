@@ -17,70 +17,8 @@ function VocalAssistant() {
     const [isSessionActive, _] = useState(true);
     const [controller, setController] = useState(null); // ✅ Track the AbortController to cancel response
 
-    const [socket, setSocket] = useState(null);
-    const [chatMessages, setChatMessages] = useState([]);
-    const [userInput, setUserInput] = useState("");
-
-    // Use refs for the RTCPeerConnection and <audio> elements
-    const pcRef = useRef(null);
-    const localStreamRef = useRef(null);
-    const remoteAudioRef = useRef(null);
 
     useEffect(() => {
-        const newSocket = new WebSocket(SIGNALING_WS_URL);
-
-        newSocket.onopen = () => {
-          console.log('WebSocket connected');
-        };
-    
-        newSocket.onerror = (error) => {
-          console.error('WebSocket error:', error);
-        };
-    
-        newSocket.onclose = () => {
-          console.log('WebSocket closed');
-        };
-
-        newSocket.onmessage = async (event) => {
-            const data = JSON.parse(event.data);
-            const pc = pcRef.current;
-            if (!pc) {
-            console.warn("Received message, but no RTCPeerConnection yet:", data);
-            return;
-            }
-
-            switch (data.type) {
-            case 'new_text_item':
-                setChatMessages(prev => [...prev, { role: data.source, text: data.data }]);
-                break;
-            case 'answer':
-                // 5. Set the remote description with the server's answer
-                try {
-                await pc.setRemoteDescription(data.answer);
-                console.log('Remote description set with Answer from server');
-                } catch (err) {
-                console.error('Error setting remote description:', err);
-                }
-                break;
-
-            case 'ice-candidate':
-                // 6. Add the candidate to the peer connection
-                try {
-                await pc.addIceCandidate(data.candidate);
-                console.log('Added remote ICE candidate');
-                } catch (err) {
-                console.error('Error adding received ice candidate', err);
-                }
-                break;
-
-            default:
-                console.log('Unknown message', data);
-            }
-        };
-
-        // Store in state so we can check readyState later
-        setSocket(newSocket);
-
         const getAudioStream = async () => {
             try {
                 const ms = await navigator.mediaDevices.getUserMedia({
@@ -96,27 +34,16 @@ function VocalAssistant() {
         };
 
         getAudioStream();
-        return () => {
-            if (newSocket && newSocket.readyState === WebSocket.OPEN) {
-              newSocket.close();
-            }
-          };
     }, []);
 
     const navigate = useNavigate(); // ✅ Hook for navigation
     
     const toggleMic = () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'toggle_mic' }));
-            setIsMicOn((prev) => !prev);
-          }
+        setIsMicOn(prevState => !prevState);
     };
 
     const toggleAudio = () => {
-        if (socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(JSON.stringify({ type: 'toggle_audio_output' }));
-            setIsAudioOn((prev) => !prev);
-          }
+        setIsAudioOn(prevState => !prevState);
     };
 
     const handleQuit = () => {
