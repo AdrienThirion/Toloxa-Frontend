@@ -6,6 +6,10 @@ const SIGNALING_WS_URL = 'ws://localhost:8000/ws';
 function App() {
   // Store one WebSocket instance in state
   const [socket, setSocket] = useState(null);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [micMuted, setMicMuted] = useState(false);
+  const [audioMuted, setAudioMuted] = useState(false);
+  const [userInput, setUserInput] = useState("");
 
   // Use refs for the RTCPeerConnection and <audio> elements
   const pcRef = useRef(null);
@@ -38,6 +42,9 @@ function App() {
       }
 
       switch (data.type) {
+        case 'new_text_item':
+          setChatMessages(prev => [...prev, { role: data.source, text: data.data }]);
+          break;
         case 'answer':
           // 5. Set the remote description with the server's answer
           try {
@@ -74,6 +81,27 @@ function App() {
     };
   }, []);
 
+  const toggleMic = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'toggle_mic' }));
+      setMicMuted((prev) => !prev);
+    }
+  };
+  
+  const toggleAudioOutput = () => {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify({ type: 'toggle_audio_output' }));
+      setAudioMuted((prev) => !prev);
+    }
+  };
+  
+  const sendUserTextResponse = () => {
+    if (socket && socket.readyState === WebSocket.OPEN && userInput.trim() !== "") {
+      socket.send(JSON.stringify({ type: 'user_text_input', text: userInput }));
+      setUserInput("");
+    }
+  };
+
   // 2) Create PeerConnection + handlers
   const createPeerConnection = () => {
     const peerConnection = new RTCPeerConnection({
@@ -81,11 +109,30 @@ function App() {
     });
 
     // When the server streams back audio (if any)
+    // peerConnection.ontrack = (event) => {
+    //   // Attach remote media stream to our remoteAudioRef
+    //   if (remoteAudioRef.current) {
+    //     console.log('Received remote track, attaching to remoteAudioRef');
+    //     remoteAudioRef.current.srcObject = event.streams[0];
+    //   }
+    // };
+
     peerConnection.ontrack = (event) => {
-      // Attach remote media stream to our remoteAudioRef
+      console.log("Received remote track:", event.track.kind);
+
+      // Usually, event.streams is an array of streams that have this track
+      // If it's audio, let's attach it to a new <audio> element
+
       if (remoteAudioRef.current) {
         console.log('Received remote track, attaching to remoteAudioRef');
         remoteAudioRef.current.srcObject = event.streams[0];
+      }
+
+      if (event.track.kind === 'audio') {
+        const audioElem = document.createElement('audio');
+        audioElem.srcObject = event.streams[0];
+        audioElem.autoplay = true;
+        document.body.appendChild(audioElem);
       }
     };
 
@@ -154,16 +201,51 @@ function App() {
 
       {/* Local audio (muted) to confirm your microphone is captured */}
       <div>
-        <label>Local Mic Preview:</label>
-        <audio ref={localStreamRef} autoPlay muted />
+        <label style={{ color: 'black' }}>Local Mic Preview:</label>
+        <audio ref={localStreamRef} autoPlay muted style={{ color: 'black' }} />
       </div>
 
       {/* Remote audio (if server sends any media back) */}
       <div>
-        <label>Remote Audio:</label>
-        <audio ref={remoteAudioRef} autoPlay />
+        <label style={{ color: 'black' }}>Remote Audio:</label>
+        <audio ref={remoteAudioRef} autoPlay  style={{ color: 'black' }}/>
+      </div>
+      
+      <div style={{ marginTop: 20 }}>
+        <h3 style={{ color: 'black' }}>Chat Log</h3>
+        <div style={{ background: '#f4f4f4', padding: '1rem', borderRadius: '8px', maxHeight: 300, overflowY: 'auto' }}>
+          {chatMessages.map((msg, idx) => (
+            <div key={idx} style={{ marginBottom: '0.5rem', color: 'black'}}>
+              <strong >{msg.role === "USER" ? "You" : "Assistant"}:</strong> {msg.text}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <div style={{ marginTop: 20,  color: 'black' }}>
+        <button onClick={toggleMic}>
+          {micMuted ? "🎤 Unmute Mic" : "🎙️ Mute Mic"}
+        </button>
+
+        <button onClick={toggleAudioOutput} style={{ marginLeft: 10 }}>
+          {audioMuted ? "🔈 Unmute Audio" : "🔇 Mute Audio"}
+        </button>
+      </div>
+
+      <div style={{ marginTop: 20,  color: 'black'  }}>
+        <input
+          type="text"
+          value={userInput}
+          onChange={(e) => setUserInput(e.target.value)}
+          placeholder="Type your message..."
+          style={{ padding: "10px", width: "80%", borderRadius: 8, border: "1px solid #ddd" }}
+        />
+        <button onClick={sendUserTextResponse} style={{ marginLeft: 10 }}>
+          Send
+        </button>
       </div>
     </div>
+    
   );
 }
 
