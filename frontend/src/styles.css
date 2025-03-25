@@ -95,8 +95,8 @@ body {
 /* 📌 Individual Appliance Card */
 /* Appliance Card */
 .appliance-card {
-    width: 240px;
-    height: 300px;
+    width: 120px;
+    height: 150px;
     background: var(--color-background1);
     border: 3px solid var(--color-background3);
     box-shadow: 4px 8px 4px rgba(0, 0, 0, 0.25);
@@ -126,7 +126,7 @@ body {
     transform: scale(1.05);
 }
 .button-container {
-    height: 240px; /* Matches button height */
+    height: 80px; /* Matches button height */
     display: flex;
     align-items: center;
     justify-content: center;
@@ -134,7 +134,7 @@ body {
 
 /* 📌 Appliance Icon */
 .appliance-icon {
-    width: 180px;
+    width: 110px;
     height: auto;
     margin: 0 auto 10px auto; /* Auto margins for horizontal centering */
     display: block;
@@ -193,8 +193,8 @@ body {
 /* 📌 Button */
 .button {
 
-    width: 240px;
-    height: 240px;
+    width: 200px;
+    height: 200px;
     align-items: center;
     background-color: var(--color-background2);
 
@@ -214,7 +214,7 @@ body {
     position: center;
 
     font-family: var(--font-body);
-    font-size: 48px;
+    font-size: 42px;
     font-weight: var(--font-weight-medium);
     color: var(--color-green-highlight);
 }

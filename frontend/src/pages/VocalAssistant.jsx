@@ -9,17 +9,18 @@ import audioOFF from "../assets/Audio-off.svg";
 import micON from "../assets/mic-on.svg"; 
 import micOFF from "../assets/mic-off.svg"; 
 
+const SIGNALING_WS_URL = 'ws://localhost:8000/ws';
+
 function VocalAssistant() {
     const [isMicOn, setIsMicOn] = useState(true); // Track Mic state
     const [isAudioOn, setIsAudioOn] = useState(true); // Track Mic state
     const [isResponding, setIsResponding] = useState(false); // ✅ Track assistant response status
     const [audioStream, setAudioStream] = useState(null);
     const [isSessionActive, _] = useState(true);
-    const [controller, setController] = useState(null); // ✅ Track the AbortController to cancel response
+    const [outputAudioStream, setOutputAudioStream] = useState(null);
+    // const [controller, setController] = useState(null); // ✅ Track the AbortController to cancel response
 
     const [socket, setSocket] = useState(null);
-    const [chatMessages, setChatMessages] = useState([]);
-    const [userInput, setUserInput] = useState("");
 
     // Use refs for the RTCPeerConnection and <audio> elements
     const pcRef = useRef(null);
@@ -30,7 +31,9 @@ function VocalAssistant() {
         const newSocket = new WebSocket(SIGNALING_WS_URL);
 
         newSocket.onopen = () => {
-          console.log('WebSocket connected');
+            console.log('WebSocket connected');
+            setSocket(newSocket); // store for global use if needed
+            startStream(newSocket); // ✅ only call here, when it's ready
         };
     
         newSocket.onerror = (error) => {
@@ -51,7 +54,18 @@ function VocalAssistant() {
 
             switch (data.type) {
             case 'new_text_item':
-                setChatMessages(prev => [...prev, { role: data.source, text: data.data }]);
+                // setChatMessages(prev => [...prev, { role: data.source, text: data.data }]);
+                console.log(data.data, data.source)
+                if (data.source=="processing") {
+                    if (data.data == "True") {
+                        setIsResponding(false);
+                    }  else {
+                        setIsResponding(true);
+                    }
+                    
+                }else{
+                setMessages(prev => [...prev, { text: data.data, sender: data.source}]);
+                }
                 break;
             case 'answer':
                 // 5. Set the remote description with the server's answer
@@ -80,28 +94,79 @@ function VocalAssistant() {
 
         // Store in state so we can check readyState later
         setSocket(newSocket);
-
-        const getAudioStream = async () => {
-            try {
-                const ms = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                    },
-                });
-                setAudioStream(ms); // ✅ Store the stream in state
-            } catch (error) {
-                console.error("Error accessing microphone:", error);
-            }
-        };
-
-        getAudioStream();
+        
+        if (outputAudioStream && isMicOn) {
+            console.log("Mic turned OFF due to output audio stream");
+        }
         return () => {
             if (newSocket && newSocket.readyState === WebSocket.OPEN) {
               newSocket.close();
             }
           };
     }, []);
+
+      // 2) Create PeerConnection + handlers
+    const createPeerConnection = () => {
+        const peerConnection = new RTCPeerConnection();
+
+        peerConnection.ontrack = (event) => {
+        console.log("Received remote track:", event.track.kind);
+
+        if (remoteAudioRef.current) {
+            console.log('Received remote track, attaching to remoteAudioRef');
+            remoteAudioRef.current.srcObject = event.streams[0];
+        }
+
+        if (event.track.kind === 'audio') {
+            const audioElem = document.createElement('audio');
+            audioElem.srcObject = event.streams[0];
+            setOutputAudioStream(audioElem.srcObject);
+            audioElem.autoplay = true;
+            document.body.appendChild(audioElem);
+        }
+        };
+
+        // ICE candidates generated locally -> send to server
+        peerConnection.onicecandidate = (event) => {
+        if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(
+            JSON.stringify({
+                type: 'ice-candidate',
+                candidate: event.candidate,
+            })
+            );
+        }
+        };
+
+        pcRef.current = peerConnection;
+    };
+
+    // 3) Start capturing local audio and send Offer
+    const startStream = async (ws) => {
+        createPeerConnection();
+        const pc = pcRef.current;
+        
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            setAudioStream(stream);
+            if (localStreamRef.current) {
+            localStreamRef.current.srcObject = stream;
+            }
+            stream.getTracks().forEach((track) => {
+            pc.addTrack(track, stream);
+            });
+        
+            const offer = await pc.createOffer();
+            await pc.setLocalDescription(offer);
+        
+            ws.send(JSON.stringify({
+            type: 'offer',
+            offer: pc.localDescription,
+            }));
+        } catch (err) {
+            console.error('Error getting mic or sending offer:', err);
+        }
+    };
 
     const navigate = useNavigate(); // ✅ Hook for navigation
     
@@ -123,9 +188,8 @@ function VocalAssistant() {
         navigate("/"); // ✅ Navigate to home page
     };
 
-    const [messages, setMessages] = useState([
-        { text: "Hello! How can I assist you today?", sender: "assistant" }
-    ]);
+    const [messages, setMessages] = useState([]);
+
     const [input, setInput] = useState("");
     const messagesEndRef = useRef(null); // Reference to the last message
 
@@ -147,58 +211,21 @@ function VocalAssistant() {
     const sendMessage = () => {
         if (input.trim() === "") return;
 
-        const userMessage = { text: input, sender: "user" };
-        setMessages([...messages, userMessage]);
-        
-        setInput(""); // ✅ Clear input
-        setTimeout(() => { 
-            textareaRef.current.style.height = "30px"; // ✅ Force reset height
-        }, 0); 
-        setIsResponding(true); // ✅ Disable input while responding
-        // Simulate Assistant Response
-        const newController = new AbortController();
-        setController(newController);
-
-        simulateAssistantResponse(newController.signal);
-    };
-
-    const simulateAssistantResponse = async (signal) => {
-        try {
-            await new Promise((resolve, reject) => {
-                const timeout = setTimeout(() => {
-                    setMessages(prevMessages => [
-                        ...prevMessages,
-                        { text: "I'm here to help! Tell me what you need.", sender: "assistant" }
-                    ]);
-                    setIsResponding(false); // ✅ Re-enable input
-                    resolve();
-                }, 3000); // Simulate 3-second delay
-
-                signal.addEventListener("abort", () => {
-                    clearTimeout(timeout);
-                    reject(new Error("Response Aborted"));
-                });
-            });
-        } catch {
-            console.log("Assistant response was stopped.");
-            setIsResponding(false); // ✅ Re-enable input
+        if (socket && socket.readyState === WebSocket.OPEN) {
+            socket.send(JSON.stringify({ type: 'user_text_input', text: input }));
         }
+        setInput("");
     };
-
-    const stopResponse = () => {
-        if (controller) {
-            controller.abort(); // ✅ Cancel assistant response
-            setController(null);
-        }
-        setIsResponding(false); // ✅ Re-enable input immediately
-    };
-
 
     const handleKeyDown = (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault(); // ✅ Prevents new line when pressing Enter
             sendMessage();
         }
+    };
+
+    const stopResponse = () => {
+        // controller.abort(); // ✅ Abort the current response 
     };
 
     return (
@@ -234,9 +261,26 @@ function VocalAssistant() {
 
                         {/* ✅ Audio Visualizer (Between Header and Chat) */}
 
-
-            {<AudioVisualizer audioStream={audioStream} isSessionActive={isSessionActive} />}
-
+            {(isMicOn || isAudioOn)  && (
+                <div className="visualizer-container">
+                    <div className="visualizer-wrapper">
+                        {audioStream && isMicOn && (
+                            <AudioVisualizer
+                            audioStream={audioStream}
+                            isSessionActive={isSessionActive}
+                            variant="input"
+                            />
+                        )}
+                        {outputAudioStream && isAudioOn && (
+                            <AudioVisualizer
+                            audioStream={outputAudioStream}
+                            isSessionActive={isSessionActive}
+                            variant="output"
+                            />
+                        )}
+                    </div>
+                </div>
+            )}
 
             {/* Chat Messages */}
             <div className="vocal-chat-messages">

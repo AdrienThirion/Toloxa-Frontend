@@ -22,6 +22,8 @@ function App() {
 
     newSocket.onopen = () => {
       console.log('WebSocket connected');
+      setSocket(newSocket); // store for global use if needed
+      startStream(newSocket); // ✅ only call here, when it's ready
     };
 
     newSocket.onerror = (error) => {
@@ -71,7 +73,7 @@ function App() {
     };
 
     // Store in state so we can check readyState later
-    setSocket(newSocket);
+    // setSocket(newSocket);
 
     // Cleanup on unmount (close WebSocket)
     return () => {
@@ -108,20 +110,9 @@ function App() {
       iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
     });
 
-    // When the server streams back audio (if any)
-    // peerConnection.ontrack = (event) => {
-    //   // Attach remote media stream to our remoteAudioRef
-    //   if (remoteAudioRef.current) {
-    //     console.log('Received remote track, attaching to remoteAudioRef');
-    //     remoteAudioRef.current.srcObject = event.streams[0];
-    //   }
-    // };
-
     peerConnection.ontrack = (event) => {
       console.log("Received remote track:", event.track.kind);
 
-      // Usually, event.streams is an array of streams that have this track
-      // If it's audio, let's attach it to a new <audio> element
 
       if (remoteAudioRef.current) {
         console.log('Received remote track, attaching to remoteAudioRef');
@@ -152,48 +143,32 @@ function App() {
   };
 
   // 3) Start capturing local audio and send Offer
-  const startStream = async () => {
-    if (!socket || socket.readyState !== WebSocket.OPEN) {
-      console.warn('WebSocket not ready; cannot start streaming');
-      return;
-    }
-
-    // Create a new PeerConnection
+  const startStream = async (ws) => {
     createPeerConnection();
     const pc = pcRef.current;
-
+  
     try {
-      // Grab local mic audio
-      const localStream = await navigator.mediaDevices.getUserMedia({
-        audio: true,
-      });
-
-      // Show local audio track in an <audio> element (muted to avoid echo)
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      // setLocalStream(stream);
       if (localStreamRef.current) {
-        localStreamRef.current.srcObject = localStream;
+        localStreamRef.current.srcObject = stream;
       }
-
-      // Add audio track(s) to PeerConnection
-      localStream.getTracks().forEach((track) => {
-        pc.addTrack(track, localStream);
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream);
       });
-
-      // Generate an SDP offer and set as local description
+  
       const offer = await pc.createOffer();
       await pc.setLocalDescription(offer);
-
-      // Send Offer to the server
-      socket.send(
-        JSON.stringify({
-          type: 'offer',
-          offer: pc.localDescription,
-        })
-      );
+  
+      ws.send(JSON.stringify({
+        type: 'offer',
+        offer: pc.localDescription,
+      }));
     } catch (err) {
-      console.error('Failed to get local stream or create offer:', err);
+      console.error('Error getting mic or sending offer:', err);
     }
   };
-
+  
   return (
     <div>
       <h1>WebRTC Audio Stream to Python Backend</h1>
@@ -216,7 +191,7 @@ function App() {
         <div style={{ background: '#f4f4f4', padding: '1rem', borderRadius: '8px', maxHeight: 300, overflowY: 'auto' }}>
           {chatMessages.map((msg, idx) => (
             <div key={idx} style={{ marginBottom: '0.5rem', color: 'black'}}>
-              <strong >{msg.role === "USER" ? "You" : "Assistant"}:</strong> {msg.text}
+              <strong >{msg.role === "user" ? "You" : "Assistant"}:</strong> {msg.text}
             </div>
           ))}
         </div>

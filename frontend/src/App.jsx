@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import DiagnoseStart from "./pages/DiagnoseStart";
 // import VocalAssistant from "./pages/VocalAssistant";
-import VocalAssistant from "./pages/TestAssistant";
+import VocalAssistant from "./pages/VocalAssistant";
 
 function App() {
     return (

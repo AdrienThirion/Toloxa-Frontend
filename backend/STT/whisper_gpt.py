@@ -8,6 +8,7 @@ import numpy as np
 import io
 import soundfile as sf
 from dotenv import load_dotenv
+import datetime
 
 # Load the environment variables from .env file
 load_dotenv()
@@ -26,13 +27,10 @@ class WhisperGPTHandler(BaseHandler):
 
     def setup(
         self,
-        model_name="whisper-1",
-        language="fr",
-        device="cuda",
-        torch_dtype="float16",
-        compile_mode=None,
-        gen_kwargs={},
+        process_run
+        
     ):
+        self.process_run = process_run
         self.model_name = "whisper-1"
         self.language = "fr"
         self.client = OpenAI(api_key=api_key)
@@ -42,9 +40,11 @@ class WhisperGPTHandler(BaseHandler):
 
         global pipeline_start
         pipeline_start = perf_counter()
-        
+        print("In Wisper GPT Handler")
         sf.write('new_file.wav', spoken_prompt, 16000)
-
+        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        sf.write(f'backend/log/{timestamp}.wav', spoken_prompt, 16000)
+        print("File created: ", f'{timestamp}.wav')
         # audio_buffer = io.BytesIO()
         # sf.write(audio_buffer, spoken_prompt, 24000, format="WAV")  # Adjust sample rate if needed
         # audio_buffer.seek(0)  # Reset buffer position to the beginning
@@ -62,5 +62,10 @@ class WhisperGPTHandler(BaseHandler):
 
         logger.debug("Finished OpenAI Whisper inference")
         logger.debug(f"Transcribed Text: {pred_text}")
+
+        if pred_text=="":
+            print("There are nothing")
+            self.process_run.is_set()
+            return
         
         yield (pred_text, self.language if self.language != "auto" else "auto")

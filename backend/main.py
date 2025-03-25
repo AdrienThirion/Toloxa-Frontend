@@ -26,6 +26,29 @@ app = FastAPI()
 client_pipelines = {}
 
 # Function to initialize queues and events for each client
+class NotifyingEvent(Event):
+    def __init__(self, on_put_callback=None, event_loop=None):
+        super().__init__()
+        self.on_put_callback = on_put_callback
+        self.event_loop = event_loop
+
+    def set(self):
+        super().set()
+        if self.on_put_callback and self.event_loop:
+            # Pass both the item and the name of the queue
+            asyncio.run_coroutine_threadsafe(
+                self.on_put_callback("True", "processing"),
+                self.event_loop
+            )
+
+    def clear(self):
+        super().clear()
+        if self.on_put_callback and self.event_loop:
+            # Pass both the item and the name of the queue
+            asyncio.run_coroutine_threadsafe(
+                self.on_put_callback("False", "processing"),
+                self.event_loop
+            )
 
 class NotifyingQueue(Queue):
     def __init__(self, *args, on_put_callback=None, queue_name=None, event_loop=None, **kwargs):
@@ -72,7 +95,8 @@ def build_pipeline(client_id, queues):
     stt = WhisperGPTHandler(
         stop_event,
         queue_in=spoken_prompt_queue,
-        queue_out=text_prompt_queue
+        queue_out=text_prompt_queue,
+        setup_args=(process_run)
     )
 
     lm = OpenApiModelHandler(
@@ -117,7 +141,7 @@ async def consume_audio(track, audio_queue: Queue, chunk_size=1024):
                 pcm_data = np.frombuffer(pcm_data, dtype=np.int16).reshape(-1, 1)
                 # Store in the client's queue
                 audio_queue.put(soxr.resample(pcm_data, 96000, 16000))
-                await asyncio.sleep(chunk_duration_s * 0.8)
+                # await asyncio.sleep(chunk_duration_s * 0.8)
     except Exception as e:
         print("Audio consumer stopped:", e)
 
@@ -142,12 +166,12 @@ async def signaling_handler(websocket):
             "stop_event": Event(),
             "should_listen": Event(),
             "should_speak": Event(),
-            "process_run" : Event(),
+            "process_run" : NotifyingEvent(on_put_callback=queue_callback, event_loop=loop),
             "recv_audio_chunks_queue": Queue(),
             "send_audio_chunks_queue": Queue(),
             "spoken_prompt_queue": Queue(),
-            "text_prompt_queue": NotifyingQueue(on_put_callback=queue_callback, queue_name="USER", event_loop=loop),
-            "lm_response_queue": NotifyingQueue(on_put_callback=queue_callback, queue_name="ASSISTANT", event_loop=loop),
+            "text_prompt_queue": NotifyingQueue(on_put_callback=queue_callback, queue_name="user", event_loop=loop),
+            "lm_response_queue": NotifyingQueue(on_put_callback=queue_callback, queue_name="assistant", event_loop=loop),
         }
     
     if client_id not in client_pipelines:
