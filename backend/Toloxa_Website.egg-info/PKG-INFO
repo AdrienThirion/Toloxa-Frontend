@@ -1,10 +1,10 @@
 Metadata-Version: 2.4
-Name: YourProjectName
+Name: Toloxa-Website
 Version: 0.1.0
-Summary: A short description of your project
-Home-page: https://github.com/yourusername/yourproject
-Author: Your Name
-Author-email: your.email@example.com
+Summary: Vocal assistant for auto-reparation
+Home-page: https://github.com/AdrienThirion/Toloxa-Frontend
+Author: Adrien Thirion
+Author-email: adrien.thirion@toloxa.com
 Requires-Python: >=3.9, <3.13
 Description-Content-Type: text/markdown
 Requires-Dist: aiortc==1.10.1
