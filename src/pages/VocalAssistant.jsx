@@ -1,6 +1,6 @@
 import { useNavigate, useLocation } from "react-router-dom"; // ✅ Import useNavigate()
 import { useState, useEffect, useRef } from "react";
-import "../VocalAssistant.css"; // Import new CSS file
+import "../vocalAssistant.css"; // Import new CSS file
 import AudioVisualizer from "../components/AudioVisualizer"; // ✅ Import the new component
 import logo from "../assets/logoL.svg"; 
 import times from "../assets/times.svg"; 
