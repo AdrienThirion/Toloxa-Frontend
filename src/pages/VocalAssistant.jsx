@@ -132,6 +132,8 @@ function VocalAssistant() {
             iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
           });
 
+        peerConnection.addTransceiver("audio", { direction: "recvonly" });
+
         peerConnection.ontrack = (event) => {
         console.log("Received remote track:", event.track.kind);
 
