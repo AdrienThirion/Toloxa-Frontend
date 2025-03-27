@@ -128,7 +128,9 @@ function VocalAssistant() {
 
       // 2) Create PeerConnection + handlers
     const createPeerConnection = () => {
-        const peerConnection = new RTCPeerConnection();
+        const peerConnection = new RTCPeerConnection({
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+          });
 
         peerConnection.ontrack = (event) => {
         console.log("Received remote track:", event.track.kind);
