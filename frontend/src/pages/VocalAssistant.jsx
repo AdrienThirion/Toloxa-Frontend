@@ -1,4 +1,4 @@
-import { useNavigate } from "react-router-dom"; // ✅ Import useNavigate()
+import { useNavigate, useLocation } from "react-router-dom"; // ✅ Import useNavigate()
 import { useState, useEffect, useRef } from "react";
 import "../VocalAssistant.css"; // Import new CSS file
 import AudioVisualizer from "../components/AudioVisualizer"; // ✅ Import the new component
@@ -12,9 +12,13 @@ import micOFF from "../assets/mic-off.svg";
 const SIGNALING_WS_URL = 'ws://localhost:8000/ws';
 
 function VocalAssistant() {
+
+    const location = useLocation();
+    const selectedAppliance = location.state?.appliance;
+
     const [isMicOn, setIsMicOn] = useState(true); // Track Mic state
     const [isAudioOn, setIsAudioOn] = useState(true); // Track Mic state
-    const [isResponding, setIsResponding] = useState(false); // ✅ Track assistant response status
+    const [isResponding, setIsResponding] = useState(true); // ✅ Track assistant response status
     const [audioStream, setAudioStream] = useState(null);
     const [isSessionActive, _] = useState(true);
     const [outputAudioStream, setOutputAudioStream] = useState(null);
@@ -26,14 +30,27 @@ function VocalAssistant() {
     const pcRef = useRef(null);
     const localStreamRef = useRef(null);
     const remoteAudioRef = useRef(null);
-
     useEffect(() => {
+
+        if (selectedAppliance === undefined) {
+            console.error("No appliance selected, redirecting to home page");
+            navigate("/"); // ✅ Redirect to home page
+        }
+        
         const newSocket = new WebSocket(SIGNALING_WS_URL);
 
         newSocket.onopen = () => {
             console.log('WebSocket connected');
             setSocket(newSocket); // store for global use if needed
             startStream(newSocket); // ✅ only call here, when it's ready
+
+            if (selectedAppliance) {
+                newSocket.send(JSON.stringify({
+                    type: "selected_appliance",
+                    appliance: selectedAppliance
+                }));
+                console.log("Sent appliance to backend:", selectedAppliance);
+            }
         };
     
         newSocket.onerror = (error) => {
@@ -44,53 +61,57 @@ function VocalAssistant() {
           console.log('WebSocket closed');
         };
 
-        newSocket.onmessage = async (event) => {
+        const handleNewTextItem = (data) => {
+            console.log(data.data, data.source);
+            if (data.source === "processing") {
+              setIsResponding(data.data !== "True");
+            } else {
+              setMessages((prev) => [...prev, { text: data.data, sender: data.source }]);
+            }
+          };
+          
+          const handleAnswer = async (data, pc) => {
+            try {
+              await pc.setRemoteDescription(data.answer);
+              console.log("Remote description set with Answer from server");
+            } catch (err) {
+              console.error("Error setting remote description:", err);
+            }
+          };
+          
+          const handleIceCandidate = async (data, pc) => {
+            try {
+              await pc.addIceCandidate(data.candidate);
+              console.log("Added remote ICE candidate");
+            } catch (err) {
+              console.error("Error adding received ice candidate", err);
+            }
+          };
+          
+          newSocket.onmessage = async (event) => {
             const data = JSON.parse(event.data);
             const pc = pcRef.current;
+          
             if (!pc) {
-            console.warn("Received message, but no RTCPeerConnection yet:", data);
-            return;
+              console.warn("Received message, but no RTCPeerConnection yet:", data);
+              return;
             }
-
+          
             switch (data.type) {
-            case 'new_text_item':
-                // setChatMessages(prev => [...prev, { role: data.source, text: data.data }]);
-                console.log(data.data, data.source)
-                if (data.source=="processing") {
-                    if (data.data == "True") {
-                        setIsResponding(false);
-                    }  else {
-                        setIsResponding(true);
-                    }
-                    
-                }else{
-                setMessages(prev => [...prev, { text: data.data, sender: data.source}]);
-                }
+              case "new_text_item":
+                handleNewTextItem(data);
                 break;
-            case 'answer':
-                // 5. Set the remote description with the server's answer
-                try {
-                await pc.setRemoteDescription(data.answer);
-                console.log('Remote description set with Answer from server');
-                } catch (err) {
-                console.error('Error setting remote description:', err);
-                }
+              case "answer":
+                await handleAnswer(data, pc);
                 break;
-
-            case 'ice-candidate':
-                // 6. Add the candidate to the peer connection
-                try {
-                await pc.addIceCandidate(data.candidate);
-                console.log('Added remote ICE candidate');
-                } catch (err) {
-                console.error('Error adding received ice candidate', err);
-                }
+              case "ice-candidate":
+                await handleIceCandidate(data, pc);
                 break;
-
-            default:
-                console.log('Unknown message', data);
+              default:
+                console.log("Unknown message", data);
             }
-        };
+          };
+          
 
         // Store in state so we can check readyState later
         setSocket(newSocket);

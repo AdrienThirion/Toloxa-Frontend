@@ -26,11 +26,14 @@ function DiagnoseStart() {
             <div className="appliance-container">
                 <ApplianceCard image={washingMachineIcon} title="Lave-linge"  selected={selectedAppliance === "WM"} onSelect={() => handleSelect("WM")}/>
                 <ApplianceCard image={ovenIcon} title="Four" selected={selectedAppliance === "OVEN"} onSelect={() => handleSelect("OVEN")}/>
-                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" selected={selectedAppliance === "DM"} onSelect={() => handleSelect("DM")}/>
+                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" selected={selectedAppliance === "DW"} onSelect={() => handleSelect("DM")}/>
             </div>
 
             <div className="button-container">
-                {selectedAppliance && (<Link to="/vocal-assistant">
+                {selectedAppliance && (<Link 
+                to="/vocal-assistant" 
+                state={{ appliance: selectedAppliance }}
+>
                     <button className={`button ${selectedAppliance ? "show" : ""}`}><span>Démarrer</span></button>
                 </Link>)}
             </div>

@@ -27,7 +27,7 @@ class WhisperGPTHandler(BaseHandler):
 
     def setup(
         self,
-        process_run
+        process_run,
         
     ):
         self.process_run = process_run
@@ -42,9 +42,8 @@ class WhisperGPTHandler(BaseHandler):
         pipeline_start = perf_counter()
         print("In Wisper GPT Handler")
         sf.write('new_file.wav', spoken_prompt, 16000)
-        timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-        sf.write(f'backend/log/{timestamp}.wav', spoken_prompt, 16000)
-        print("File created: ", f'{timestamp}.wav')
+        # timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+        # sf.write(f'backend/log/{timestamp}.wav', spoken_prompt, 16000)
         # audio_buffer = io.BytesIO()
         # sf.write(audio_buffer, spoken_prompt, 24000, format="WAV")  # Adjust sample rate if needed
         # audio_buffer.seek(0)  # Reset buffer position to the beginning
