@@ -9,7 +9,7 @@ import audioOFF from "../assets/Audio-off.svg";
 import micON from "../assets/mic-on.svg"; 
 import micOFF from "../assets/mic-off.svg"; 
 
-const SIGNALING_WS_URL = 'ws://localhost:8000/ws';
+const SIGNALING_WS_URL = import.meta.env.VITE_SIGNALING_WS_URL || 'ws://localhost:8000/ws';
 
 function VocalAssistant() {
 
