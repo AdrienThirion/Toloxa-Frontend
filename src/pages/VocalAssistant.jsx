@@ -129,14 +129,26 @@ function VocalAssistant() {
       // 2) Create PeerConnection + handlers
     const createPeerConnection = () => {
         
-        const peerConnection = new RTCPeerConnection({
-            iceServers: [
-              {urls:[
-                "stun:stun.l.google.com:19302",
-                "stun:stun1.l.google.com:19302",
-                "stun:stun2.l.google.com:19302"]}
-            ]
-          });
+      const peerConnection = new RTCPeerConnection({
+        iceServers: [
+          {
+            urls: ["stun:fr-turn8.xirsys.com"]
+          },
+          {
+            urls: [
+              "turn:fr-turn8.xirsys.com:80?transport=udp",
+              "turn:fr-turn8.xirsys.com:3478?transport=udp",
+              "turn:fr-turn8.xirsys.com:80?transport=tcp",
+              "turn:fr-turn8.xirsys.com:3478?transport=tcp",
+              "turns:fr-turn8.xirsys.com:443?transport=tcp",
+              "turns:fr-turn8.xirsys.com:5349?transport=tcp"
+            ],
+            username: "k1YmJx1vrnl4IT33ZgX06hGXB4ldhFmH4OBaHyVuJS4V7Cbbjw0HN8YLHr59k9CvAAAAAGfmw2pUaGlyaW9uYQ==",
+            credential: "4486194c-0beb-11f0-a67c-2af671819ea3"
+          }
+        ]
+      });
+      
 
         peerConnection.addTransceiver("audio", { direction: "recvonly" });
 
