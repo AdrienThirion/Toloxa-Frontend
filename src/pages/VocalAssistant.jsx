@@ -131,17 +131,12 @@ function VocalAssistant() {
         
         const peerConnection = new RTCPeerConnection({
             iceServers: [
-              {urls: [
-                  "turn:global.turn.twilio.com:3478?transport=udp",
-                  "turn:global.turn.twilio.com:3478?transport=tcp",
-                  "turn:global.turn.twilio.com:443?transport=tcp"
-                ],
-                username: "818f375d7989b13d6959ebf28e7b7e4a636c28fed331e734ec0c094e7012964d",
-                credential: "hFU2FnLar5AxDihYLJLaG/0uEW9f7nwFMeug7iX0yhM="
-              }
+              {urls:[
+                "stun:stun.l.google.com:19302",
+                "stun:stun1.l.google.com:19302",
+                "stun:stun2.l.google.com:19302"]}
             ]
           });
-          
 
         peerConnection.addTransceiver("audio", { direction: "recvonly" });
 
