@@ -146,7 +146,7 @@ function VocalAssistant() {
             username: "k1YmJx1vrnl4IT33ZgX06hGXB4ldhFmH4OBaHyVuJS4V7Cbbjw0HN8YLHr59k9CvAAAAAGfmw2pUaGlyaW9uYQ==",
             credential: "4486194c-0beb-11f0-a67c-2af671819ea3"
           }
-        ]
+        ], iceTransportPolicy: "relay" // Force relay candidates for testing
       });
       
 
