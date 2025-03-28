@@ -176,8 +176,14 @@ function VocalAssistant() {
         }
         };
 
-        window._pc = peerConnection;
         pcRef.current = peerConnection;
+
+        window._pc = peerConnection;
+
+        // Optional: live ICE state logging
+        peerConnection.oniceconnectionstatechange = () => {
+          console.log("🌐 ICE connection state:", peerConnection.iceConnectionState);
+        };
     };
 
     // 3) Start capturing local audio and send Offer
