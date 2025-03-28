@@ -1,0 +1,16 @@
+{
+    "build": {
+      "builder": "NIXPACKS",
+      "nixpacksConfigPath": "../nixpacks-frontend.toml"
+    },
+    "deploy": {
+      "startCommand": "serve -s dist",
+      "healthcheckPath": "/"
+    },
+    "dependencies": {
+        "vite": "...",
+        "react": "...",
+        "serve": "^14.2.0"
+      }
+  }
+  
