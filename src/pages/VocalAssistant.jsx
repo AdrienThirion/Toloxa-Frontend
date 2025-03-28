@@ -129,7 +129,14 @@ function VocalAssistant() {
       // 2) Create PeerConnection + handlers
     const createPeerConnection = () => {
         const peerConnection = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+            iceServers: [
+              { urls: "stun:stun.l.google.com:19302" },
+              {
+                urls: "turn:relay.metered.ca:80",
+                username: "openai",
+                credential: "openai",
+              },
+            ],
           });
 
         peerConnection.addTransceiver("audio", { direction: "recvonly" });
