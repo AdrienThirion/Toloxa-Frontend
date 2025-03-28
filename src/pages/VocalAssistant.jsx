@@ -128,6 +128,7 @@ function VocalAssistant() {
 
       // 2) Create PeerConnection + handlers
     const createPeerConnection = () => {
+        
         const peerConnection = new RTCPeerConnection({
             iceServers: [
               { urls: "stun:global.stun.twilio.com:3478" },
@@ -175,6 +176,7 @@ function VocalAssistant() {
         }
         };
 
+        window._pc = peerConnection;
         pcRef.current = peerConnection;
     };
 
