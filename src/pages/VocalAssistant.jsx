@@ -133,8 +133,6 @@ function VocalAssistant() {
           { urls: "stun:fr-turn8.xirsys.com" },
           {
             urls: [
-              "turn:fr-turn8.xirsys.com:80?transport=udp",
-              "turn:fr-turn8.xirsys.com:3478?transport=udp",
               "turn:fr-turn8.xirsys.com:80?transport=tcp",
               "turn:fr-turn8.xirsys.com:3478?transport=tcp",
               "turns:fr-turn8.xirsys.com:443?transport=tcp",
