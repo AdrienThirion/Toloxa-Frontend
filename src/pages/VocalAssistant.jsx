@@ -102,6 +102,7 @@ function VocalAssistant() {
                 handleNewTextItem(data);
                 break;
               case "answer":
+                console.log("ANSWER RECEIVE")
                 await handleAnswer(data, pc);
                 break;
               case "ice-candidate":
