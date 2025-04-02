@@ -129,7 +129,14 @@ function VocalAssistant() {
       // 2) Create PeerConnection + handlers
     const createPeerConnection = () => {
         const peerConnection = new RTCPeerConnection({
-            iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+            iceServers: [
+              { urls: "stun:fr-turn8.xirsys.com" }, // Serveur STUN de Google
+              {
+                urls: "turn:fr-turn8.xirsys.com:80?transport=tcp", // Remplacez par l'URL de votre serveur TURN
+                username: "k1YmJx1vrnl4IT33ZgX06hGXB4ldhFmH4OBaHyVuJS4V7Cbbjw0HN8YLHr59k9CvAAAAAGfmw2pUaGlyaW9uYQ==", // Remplacez par votre nom d'utilisateur TURN
+                credential: "4486194c-0beb-11f0-a67c-2af671819ea3", // Remplacez par votre mot de passe TURN
+              },
+            ],
           });
 
         peerConnection.ontrack = (event) => {
