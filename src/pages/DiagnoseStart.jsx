@@ -26,7 +26,7 @@ function DiagnoseStart() {
             <div className="appliance-container">
                 <ApplianceCard image={washingMachineIcon} title="Lave-linge"  selected={selectedAppliance === "WM"} onSelect={() => handleSelect("WM")}/>
                 <ApplianceCard image={ovenIcon} title="Four" selected={selectedAppliance === "OVEN"} onSelect={() => handleSelect("OVEN")}/>
-                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" selected={selectedAppliance === "DW"} onSelect={() => handleSelect("DM")}/>
+                <ApplianceCard image={dishwasherIcon} title="Lave-vaisselle" selected={selectedAppliance === "DW"} onSelect={() => handleSelect("DW")}/>
             </div>
 
             <div className="button-container">
