@@ -11,6 +11,20 @@ import micOFF from "../assets/mic-off.svg";
 
 const SIGNALING_WS_URL = import.meta.env.VITE_SIGNALING_WS_URL || 'ws://localhost:8000/ws';
 
+const ICE_SERVERS = [
+  { urls: "stun:stun.relay.metered.ca:80" },
+  {
+      urls: [
+          "turn:global.relay.metered.ca:80",
+          "turn:global.relay.metered.ca:80?transport=tcp",
+          "turn:global.relay.metered.ca:443",
+          "turns:global.relay.metered.ca:443?transport=tcp"
+      ],
+      username: "908ff0fe0f7e391c8cf18752",
+      credential: "6MlCUVTdXXOK9bys"
+  }
+];
+
 function VocalAssistant() {
 
     const location = useLocation();
@@ -28,8 +42,8 @@ function VocalAssistant() {
 
     // Use refs for the RTCPeerConnection and <audio> elements
     const pcRef = useRef(null);
-    const localStreamRef = useRef(null);
-    const remoteAudioRef = useRef(null);
+    // const localStreamRef = useRef(null);
+    // const remoteAudioRef = useRef(null);
     useEffect(() => {
 
         if (selectedAppliance === undefined) {
@@ -38,11 +52,20 @@ function VocalAssistant() {
         }
         
         const newSocket = new WebSocket(SIGNALING_WS_URL);
+        const peerConnection = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceTransportPolicy: "relay" });
+
 
         newSocket.onopen = () => {
             console.log('WebSocket connected');
             setSocket(newSocket); // store for global use if needed
-            startStream(newSocket); // ✅ only call here, when it's ready
+            navigator.mediaDevices.getUserMedia({ audio: true })
+            .then((stream) => {
+                stream.getTracks().forEach(track => peerConnection.addTrack(track, stream));
+                return peerConnection.createOffer();
+            })
+            .then((offer) => peerConnection.setLocalDescription(offer))
+            .then(() => socket.send(JSON.stringify({ type: 'offer', offer: peerConnection.localDescription })))
+            .catch(err => console.error("Error setting up stream or sending offer:", err));
 
             if (selectedAppliance) {
                 newSocket.send(JSON.stringify({
@@ -52,7 +75,44 @@ function VocalAssistant() {
                 console.log("Sent appliance to backend:", selectedAppliance);
             }
         };
-    
+
+        newSocket.onmessage = async (event) => {
+          const data = JSON.parse(event.data);
+          const pc = pcRef.current;
+        
+          if (!pc) {
+            console.warn("Received message, but no RTCPeerConnection yet:", data);
+            return;
+          }
+        
+          switch (data.type) {
+            case "new_text_item":
+              handleNewTextItem(data);
+              break;
+            case "answer":
+              peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer));
+              break;
+            case "ice-candidate":
+              peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate));
+              break;
+            default:
+              console.log("Unknown message", data);
+          }
+        };
+        
+        peerConnection.onicecandidate = (event) => {
+          if (event.candidate) {
+              socket.send(JSON.stringify({ type: 'ice-candidate', candidate: event.candidate }));
+          }
+      };
+  
+      peerConnection.ontrack = (event) => {
+          const remoteAudio = new Audio();
+          remoteAudio.srcObject = event.streams[0];
+          remoteAudio.autoplay = true;
+          document.body.appendChild(remoteAudio);
+      };
+
         newSocket.onerror = (error) => {
           console.error('WebSocket error:', error);
         };
@@ -69,53 +129,7 @@ function VocalAssistant() {
               setMessages((prev) => [...prev, { text: data.data, sender: data.source }]);
             }
           };
-          
-          const handleAnswer = async (data, pc) => {
-            try {
-              await pc.setRemoteDescription(data.answer);
-              console.log("Remote description set with Answer from server");
-            } catch (err) {
-              console.error("Error setting remote description:", err);
-            }
-          };
-          
-          const handleIceCandidate = async (data, pc) => {
-            try {
-              await pc.addIceCandidate(data.candidate);
-              console.log("Added remote ICE candidate");
-            } catch (err) {
-              console.error("Error adding received ice candidate", err);
-            }
-          };
-          
-          newSocket.onmessage = async (event) => {
-            const data = JSON.parse(event.data);
-            const pc = pcRef.current;
-          
-            if (!pc) {
-              console.warn("Received message, but no RTCPeerConnection yet:", data);
-              return;
-            }
-          
-            switch (data.type) {
-              case "new_text_item":
-                handleNewTextItem(data);
-                break;
-              case "answer":
-                console.log("ANSWER RECEIVE")
-                await handleAnswer(data, pc);
-                break;
-              case "ice-candidate":
-                await handleIceCandidate(data, pc);
-                break;
-              default:
-                console.log("Unknown message", data);
-            }
-          };
-          
-
-        // Store in state so we can check readyState later
-        setSocket(newSocket);
+              
         
         if (outputAudioStream && isMicOn) {
             console.log("Mic turned OFF due to output audio stream");
@@ -124,91 +138,68 @@ function VocalAssistant() {
             if (newSocket && newSocket.readyState === WebSocket.OPEN) {
               newSocket.close();
             }
+            peerConnection.close();
           };
     }, []);
 
-      // 2) Create PeerConnection + handlers
-    const createPeerConnection = () => {
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.relay.metered.ca:80" },
-          {
-            urls: [
-              "turn:global.relay.metered.ca:80",
-              "turn:global.relay.metered.ca:80?transport=tcp",
-              "turn:global.relay.metered.ca:80?transport=tcp",
-              "turn:global.relay.metered.ca:443",
-              "turns:global.relay.metered.ca:443?transport=tcp"
-            ],
-            username: "908ff0fe0f7e391c8cf18752",
-            credential: "6MlCUVTdXXOK9bys"
-          }
-        ],
-        // Forcer l'utilisation exclusive des candidats relayés
-        iceTransportPolicy: "relay",
-        bundlePolicy: "balanced",
-        rtcpMuxPolicy: "require",
-        iceCandidatePoolSize: 2 // une valeur supérieure peut aider
-      });
 
-        peerConnection.ontrack = (event) => {
-        console.log("Received remote track:", event.track.kind);
+        // peerConnection.ontrack = (event) => {
+        // console.log("Received remote track:", event.track.kind);
 
-        if (remoteAudioRef.current) {
-            console.log('Received remote track, attaching to remoteAudioRef');
-            remoteAudioRef.current.srcObject = event.streams[0];
-        }
+        // if (remoteAudioRef.current) {
+        //     console.log('Received remote track, attaching to remoteAudioRef');
+        //     remoteAudioRef.current.srcObject = event.streams[0];
+        // }
 
-        if (event.track.kind === 'audio') {
-            const audioElem = document.createElement('audio');
-            audioElem.srcObject = event.streams[0];
-            setOutputAudioStream(audioElem.srcObject);
-            audioElem.autoplay = true;
-            document.body.appendChild(audioElem);
-        }
-        };
+        // if (event.track.kind === 'audio') {
+        //     const audioElem = document.createElement('audio');
+        //     audioElem.srcObject = event.streams[0];
+        //     setOutputAudioStream(audioElem.srcObject);
+        //     audioElem.autoplay = true;
+        //     document.body.appendChild(audioElem);
+        // }
+        // };
 
         // ICE candidates generated locally -> send to server
-        peerConnection.onicecandidate = (event) => {
-        if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(
-            JSON.stringify({
-                type: 'ice-candidate',
-                candidate: event.candidate,
-            })
-            );
-        }
-        };
+    //     peerConnection.onicecandidate = (event) => {
+    //     if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
+    //         socket.send(
+    //         JSON.stringify({
+    //             type: 'ice-candidate',
+    //             candidate: event.candidate,
+    //         })
+    //         );
+    //     }
+    //     };
 
-        pcRef.current = peerConnection;
-    };
+    //     pcRef.current = peerConnection;
+    // };
 
-    // 3) Start capturing local audio and send Offer
-    const startStream = async (ws) => {
-        createPeerConnection();
-        const pc = pcRef.current;
+    // // 3) Start capturing local audio and send Offer
+    // const startStream = async (ws) => {
+    //     const pc = pcRef.current;
         
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            setAudioStream(stream);
-            if (localStreamRef.current) {
-            localStreamRef.current.srcObject = stream;
-            }
-            stream.getTracks().forEach((track) => {
-            pc.addTrack(track, stream);
-            });
+    //     try {
+    //         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    //         setAudioStream(stream);
+    //         if (localStreamRef.current) {
+    //         localStreamRef.current.srcObject = stream;
+    //         }
+    //         stream.getTracks().forEach((track) => {
+    //         pc.addTrack(track, stream);
+    //         });
         
-            const offer = await pc.createOffer();
-            await pc.setLocalDescription(offer);
+    //         const offer = await pc.createOffer();
+    //         await pc.setLocalDescription(offer);
         
-            ws.send(JSON.stringify({
-            type: 'offer',
-            offer: pc.localDescription,
-            }));
-        } catch (err) {
-            console.error('Error getting mic or sending offer:', err);
-        }
-    };
+    //         ws.send(JSON.stringify({
+    //         type: 'offer',
+    //         offer: pc.localDescription,
+    //         }));
+    //     } catch (err) {
+    //         console.error('Error getting mic or sending offer:', err);
+    //     }
+    // };
 
     const navigate = useNavigate(); // ✅ Hook for navigation
     
