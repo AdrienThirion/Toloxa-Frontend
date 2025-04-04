@@ -10,6 +10,19 @@ import micON from "../assets/mic-on.svg";
 import micOFF from "../assets/mic-off.svg"; 
 
 const SIGNALING_WS_URL = import.meta.env.VITE_SIGNALING_WS_URL || 'ws://localhost:8000/ws';
+const ICE_SERVERS = [
+  { urls: "stun:stun.relay.metered.ca:80" },
+  {
+      urls: [
+          "turn:global.relay.metered.ca:80",
+          "turn:global.relay.metered.ca:80?transport=tcp",
+          "turn:global.relay.metered.ca:443",
+          "turns:global.relay.metered.ca:443?transport=tcp"
+      ],
+      username: "908ff0fe0f7e391c8cf18752",
+      credential: "6MlCUVTdXXOK9bys"
+  }
+];
 
 function VocalAssistant() {
 
@@ -38,11 +51,12 @@ function VocalAssistant() {
         }
         
         const newSocket = new WebSocket(SIGNALING_WS_URL);
+        const peerConnection = new RTCPeerConnection({ iceServers: ICE_SERVERS, iceTransportPolicy: "relay" });
 
         newSocket.onopen = () => {
             console.log('WebSocket connected');
             setSocket(newSocket); // store for global use if needed
-            startStream(newSocket); // ✅ only call here, when it's ready
+            startStream(newSocket, peerConnection); // ✅ only call here, when it's ready
 
             if (selectedAppliance) {
                 newSocket.send(JSON.stringify({
@@ -113,6 +127,33 @@ function VocalAssistant() {
             }
           };
           
+          peerConnection.ontrack = (event) => {
+            console.log("Received remote track:", event.track.kind);
+    
+            if (remoteAudioRef.current) {
+                console.log('Received remote track, attaching to remoteAudioRef');
+                remoteAudioRef.current.srcObject = event.streams[0];
+            }
+    
+            if (event.track.kind === 'audio') {
+                const audioElem = document.createElement('audio');
+                audioElem.srcObject = event.streams[0];
+                setOutputAudioStream(audioElem.srcObject);
+                audioElem.autoplay = true;
+                document.body.appendChild(audioElem);
+            }
+            };
+
+          peerConnection.onicecandidate = (event) => {
+            if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
+                socket.send(
+                JSON.stringify({
+                    type: 'ice-candidate',
+                    candidate: event.candidate,
+                })
+                );
+            }
+            };
 
         // Store in state so we can check readyState later
         setSocket(newSocket);
@@ -126,67 +167,14 @@ function VocalAssistant() {
             }
           };
     }, []);
-
-      // 2) Create PeerConnection + handlers
-    const createPeerConnection = () => {
-      const peerConnection = new RTCPeerConnection({
-        iceServers: [
-          { urls: "stun:stun.relay.metered.ca:80" },
-          {
-            urls: [
-              "turn:global.relay.metered.ca:80",
-              "turn:global.relay.metered.ca:80?transport=tcp",
-              "turn:global.relay.metered.ca:80?transport=tcp",
-              "turn:global.relay.metered.ca:443",
-              "turns:global.relay.metered.ca:443?transport=tcp"
-            ],
-            username: "908ff0fe0f7e391c8cf18752",
-            credential: "6MlCUVTdXXOK9bys"
-          }
-        ],
-        // Forcer l'utilisation exclusive des candidats relayés
-        iceTransportPolicy: "relay",
-        bundlePolicy: "balanced",
-        rtcpMuxPolicy: "require",
-        iceCandidatePoolSize: 2 // une valeur supérieure peut aider
-      });
-
-        peerConnection.ontrack = (event) => {
-        console.log("Received remote track:", event.track.kind);
-
-        if (remoteAudioRef.current) {
-            console.log('Received remote track, attaching to remoteAudioRef');
-            remoteAudioRef.current.srcObject = event.streams[0];
-        }
-
-        if (event.track.kind === 'audio') {
-            const audioElem = document.createElement('audio');
-            audioElem.srcObject = event.streams[0];
-            setOutputAudioStream(audioElem.srcObject);
-            audioElem.autoplay = true;
-            document.body.appendChild(audioElem);
-        }
-        };
+        
 
         // ICE candidates generated locally -> send to server
-        peerConnection.onicecandidate = (event) => {
-        if (event.candidate && socket && socket.readyState === WebSocket.OPEN) {
-            socket.send(
-            JSON.stringify({
-                type: 'ice-candidate',
-                candidate: event.candidate,
-            })
-            );
-        }
-        };
-
-        pcRef.current = peerConnection;
-    };
 
     // 3) Start capturing local audio and send Offer
-    const startStream = async (ws) => {
-        createPeerConnection();
-        const pc = pcRef.current;
+    const startStream = async (ws, pc) => {
+        // createPeerConnection();
+        // const pc = pcRef.current;
         
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
