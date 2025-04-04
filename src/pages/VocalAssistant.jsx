@@ -131,16 +131,17 @@ function VocalAssistant() {
     const createPeerConnection = () => {
       const peerConnection = new RTCPeerConnection({
         iceServers: [
-          { urls: "stun:fr-turn8.xirsys.com" },
+          { urls: "stun:stun.relay.metered.ca:80" },
           {
             urls: [
-              "turn:fr-turn8.xirsys.com:80?transport=tcp",
-              "turn:fr-turn8.xirsys.com:3478?transport=tcp",
-              "turns:fr-turn8.xirsys.com:443?transport=tcp",
-              "turns:fr-turn8.xirsys.com:5349?transport=tcp"
+              "turn:global.relay.metered.ca:80",
+              "turn:global.relay.metered.ca:80?transport=tcp",
+              "turn:global.relay.metered.ca:80?transport=tcp",
+              "turn:global.relay.metered.ca:443",
+              "turns:global.relay.metered.ca:443?transport=tcp"
             ],
-            username: "k1YmJx1vrnl4IT33ZgX06hGXB4ldhFmH4OBaHyVuJS4V7Cbbjw0HN8YLHr59k9CvAAAAAGfmw2pUaGlyaW9uYQ==",
-            credential: "4486194c-0beb-11f0-a67c-2af671819ea3"
+            username: "908ff0fe0f7e391c8cf18752",
+            credential: "6MlCUVTdXXOK9bys"
           }
         ],
         // Forcer l'utilisation exclusive des candidats relayés
